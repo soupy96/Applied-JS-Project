@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head runat="server">
+    <title>Michael - Project 1</title>
+    <style type="text/css">
+    /*
+    The CSS styles the table thats created.
+    */
+        body {
+            background-color: #BFC9DC;
+        }
+
+        .TableClass {
+            font-family: Verdana, Arial, Helvetica;
+            font-size: 9.0pt;
+        }
+
+        .BaseColumn {
+            text-align: center;
+        }
+
+        .AlphaColumn {
+            width: 80px;
+            height: 30px;
+            cursor: pointer;
+            background-color: #C3DAF9;
+            border: 1px solid #002d96;
+        }
+    </style>
+    <script language="JavaScript" type="text/javascript">
+        //This is the variable that we use to find out which cell was selected last
+        var lastCell = null;
+
+        //This sets up the main array that we use to store the table values and formulas
+        tblArray = [];
+
+        //This defines the parameters of the table
+        var TBLROWS = 20;
+        var TBLCOLUMNS = 10;
+
+        //This function saves what ever is in the table array to the local storage by converting it to JSON and then storing it in the local storage
+        function saveInput() {
+            localStorage.setItem('DATA', JSON.stringify(tblArray));
+        }
+
+        //This function helps get the cell id from the table
+        function $gel(id) {
+            return document.getElementById(id);
+        }
+
+        //This populates the main table array with the parameters of the table
+        for (var i = 0; i < TBLROWS; i++){
+            tblArray[i] = [];
+            for (var j = 0; j < TBLCOLUMNS; j++)
+                tblArray[i][j] = "";
+        }
+
+        //This function calls the buildTable function with the table rows and columns as parameters. It then builds the table in the div with the id of SpreadsheetTable. If there is JSON stored in the local storage we pull it out and repopulate the table with it, if not we just load up the table and array as normal.
+        function createTable() {
+            document.getElementById("SpreadsheetTable").innerHTML = buildTable(TBLROWS, TBLCOLUMNS);
+
+            if (localStorage.getItem('DATA') === null) {
+                for (var r = 0; r < tblArray.length; r++) {
+                    var id = "";
+                    for (var c = 0; c < tblArray[r].length; c++) {
+                        id = (r + 1) + "_" + (c + 1);
+
+                        $gel(id).innerHTML = tblArray[r][c];
+                    }
+                }
+            } else {
+                var restored = JSON.parse(localStorage.getItem('DATA'));
+                tblArray = restored;
+
+                for (var r = 0; r < tblArray.length; r++) {
+                    var id = "";
+                    for (var c = 0; c < tblArray[r].length; c++) {
+                        id = (r + 1) + "_" + (c + 1);
+
+                        $gel(id).innerHTML = tblArray[r][c];
+                    }
+                }
+            }
+        }
+
+        //This function actually builds the table with HTML elements within JavaScript. 
+        function buildTable(TBLROWS, TBLCOLUMNS) {
+            var divHTML = "<table border='1' cellpadding='0' cellspacing='0' class='TableClass'>";
+
+            divHTML += "<tr><th></th>";
+
+            for (var j = 0; j < TBLCOLUMNS; j++)
+                divHTML += "<th>" + String.fromCharCode(j + 65) + "</th>";
+
+            divHTML += "</tr>";
+
+            for (var i = 1; i <= TBLROWS; i++) {
+                divHTML += "<tr>";
+                divHTML += "<td id='" + i + "_0' class='BaseColumn'>" + i + "</td>";
+
+                for (var j = 1; j <= TBLCOLUMNS; j++)
+                    divHTML += "<td id='" + i + "_" + j + "' class='AlphaColumn' onclick='clickCell(this)'></td>";
+
+                divHTML += "</tr>";
+            }
+
+            divHTML += "</table>";
+
+            return divHTML;
+        }
+
+        //This function loads the most recently saved table data from the local storage and then populates the table with the values.
+        function loadInput() {
+            var restored = JSON.parse(localStorage.getItem('DATA'));
+            tblArray = restored;
+
+            for (var r = 0; r < tblArray.length; r++) {
+                var id = "";
+                for (var c = 0; c < tblArray[r].length; c++) {
+                    id = (r + 1) + "_" + (c + 1);
+
+                    $gel(id).innerHTML = tblArray[r][c];
+                }
+            }
+        }
+
+        //This function clears the table and main table array so that they both are empty and contain no values. Then calls the refresh function to reset the table.
+        function clearAll() {
+            for (var i = 0; i < tblArray.length; i++) {
+                for (var j = 0; j < tblArray[i].length; j++)
+                    tblArray[i][j] = "";
+            }
+
+            if (lastCell != null)
+                lastCell.style.backgroundColor = " #C3DAF9";
+
+            document.getElementById("inputs").value = "";
+
+            refreshTable();
+        }        
+
+        //This function refreshes the table.
+        function refreshTable() {
+            for (var r = 0; r < tblArray.length; r++) {
+                var id = "";
+                for (var c = 0; c < tblArray[r].length; c++) {
+                    id = (r + 1) + "_" + (c + 1);
+
+                    $gel(id).innerHTML = tblArray[r][c];
+                }
+            }
+        }
+
+        //This function works as validation for the calculations that are done so that no text values are included in the calculations and produce errors
+        function isFloat(s){
+            var ch = "";
+            var justFloat = "0123456789.";
+            
+            for (var i = 0; i < s.length; i++){
+                ch = s.substr(i, 1);
+            
+                if (justFloat.indexOf(ch) == -1)
+                    return false;
+            }
+            return true;
+        }
+
+        //This function finds which cell was clicked on sets the background colour to pink. Once clicked it takes what ever value is stored in the main table array and puts it in the textbox.
+        function clickCell(ref) {
+            var rcArray = ref.id.split('_');
+
+            var r = rcArray[0] - 1;
+            var c = rcArray[1] - 1;
+
+            if (lastCell != null)
+                lastCell.style.backgroundColor = "#C3DAF9";
+
+            ref.style.backgroundColor = "pink";
+
+            lastCell = ref;
+
+            $gel("inputs").value = tblArray[r][c];
+
+            $gel("inputs").focus();
+            $gel("inputs").select();
+        }
+
+        //This function does all the main calculations for the project. It looks through all the cells that have a formula within it and starts the calculation. It takes the formula and splits it up and take the cells that we want to calculate between. From the cells that we want calculated we add up the values that are between the two. If another value is added it adds it to the final total and updates the cell that the original total is in. If the value is a number and not empty we add it into the calculation and onto the final total. We then take the cell id that the formula was put into and outputs the final total.
+        function recalculate(uppertbValue){
+            for (var i = 0; i < TBLROWS; i++){
+                for (var j = 0; j < TBLCOLUMNS; j++){
+                    if (tblArray[i][j].indexOf("=SUM") != -1){
+                        var values = tblArray[i][j];
+
+                        var pattern = /[:|\(|\)]/;
+                        var ar = values.split(pattern);
+
+                        var tokenArray = []
+                        tokenArray.push(ar[1], ar[2]);
+                            
+                        if (tokenArray != null){
+                            var fromColumn = tokenArray[0].substr(0, 1);
+                            var fromRow = tokenArray[0].substr(1, tokenArray[0].length - 1);
+
+                            var toColumn = tokenArray[1].substr(0, 1);
+                            var toRow = tokenArray[1].substr(1, tokenArray[1].length - 1);
+
+                            var fromRowIndex = parseFloat(fromRow) - 1;
+                            var fromColIndex = fromColumn.charCodeAt(0) - 65;
+
+                            var toRowIndex = parseFloat(toRow) - 1;
+                            var toColIndex = toColumn.charCodeAt(0) - 65;
+
+                            var sumTotal = 0;
+
+                            for (var a = fromRowIndex; a <= toRowIndex; a++){
+                                for (var b = fromColIndex; b <= toColIndex; b++){
+                                    if (isFloat(tblArray[a][b]) && tblArray[a][b] !== "")
+                                        sumTotal += parseFloat(tblArray[a][b]);
+                                }
+                            }
+                            var cellID = (i + 1) + "_" + (j + 1);
+                            var ref = document.getElementById(cellID)
+                            ref.innerHTML = sumTotal;
+                        }           
+                    }
+                }
+            }
+        }
+
+        //This function does all the main calculations for the project. It listens for the user to enter a value. Once enter has been hit we see if its a normal value or a formula. If it is a normal value we add it to the table and the main table array. If its a formula it starts the calculation. It takes the formula and splits it up and take the cells that we want to calculate between. From the cells that we want calculated we add up the values that are between the two. If the value is a number and not empty we add it into the calculation and onto the final total. We then take the cell id that the formula was put into and outputs the final total into that cell while storing the formula into the table to be selected out again if need be.
+        document.addEventListener("keypress", function(inputData) {
+            if (inputData.keyCode === 13) {
+                var tbValue = $gel("inputs").value;
+                var uppertbValue = tbValue.toUpperCase();
+
+                var pattern = /[:|\(|\)]/;
+                var ar = uppertbValue.split(pattern);
+                var sum = ar[0].toUpperCase();
+                
+                if (ar.length < 4){
+                    if (lastCell === null)
+                    return;
+
+                    var rcArray = lastCell.id.split("_");
+
+                    lastCell.innerHTML = $gel("inputs").value;
+
+                    var r = rcArray[0] - 1;
+                    var c = rcArray[1] - 1;
+
+                    tblArray[r][c] = $gel("inputs").value;
+                    recalculate(uppertbValue);
+                }
+                else if (sum === "=SUM") {
+                    var rcArray = lastCell.id.split("_");
+
+                    var r = rcArray[0];
+                    var c = rcArray[1];
+
+                    tblArray[r -1][c -1] = uppertbValue;
+
+                    var tokenArray = []
+                    tokenArray.push(ar[1], ar[2]);
+                        
+                    if (tokenArray != null){
+                        var fromColumn = tokenArray[0].substr(0, 1);
+                        var fromRow = tokenArray[0].substr(1, tokenArray[0].length - 1);
+
+                        var toColumn = tokenArray[1].substr(0, 1);
+                        var toRow = tokenArray[1].substr(1, tokenArray[1].length - 1);
+
+                        var fromRowIndex = parseFloat(fromRow) - 1;
+                        var fromColIndex = fromColumn.charCodeAt(0) - 65;
+
+                        var toRowIndex = parseFloat(toRow) - 1;
+                        var toColIndex = toColumn.charCodeAt(0) - 65;
+
+                        var sumTotal = 0;
+
+                        for (var i = fromRowIndex; i <= toRowIndex; i++){
+                            for (var j = fromColIndex; j <= toColIndex; j++){
+                                if (isFloat(tblArray[i][j]) && tblArray[i][j] !== "")
+                                    sumTotal += parseFloat(tblArray[i][j]);
+                            }
+                        }
+                        var cellID = (r) + "_" + (c);
+                        var ref = document.getElementById(cellID)
+                        ref.innerHTML = sumTotal;
+                    }
+                }
+            }
+        });
+    </script>
+</head>
+<!--This onload creates the table-->
+<body onload="createTable();">
+    <input type="text" id="inputs" value="" />
+    <!--This button loads the most recent values from the local storage that we then put into the table-->
+    <input type="button" value="Load" onclick="loadInput();">
+    <!--This button saves whatever is stored in the table into the local storage-->
+    <input type="button" value="Save" onclick="saveInput();">
+    <!--This button clear whatever is in the table and main table array so they are both empty-->
+    <input type="button" value="Clear" onclick="clearAll();">
+    <br/>
+    <br/>
+    <!--This is where the JavaScript table is created-->
+    <div id="SpreadsheetTable">
+    </div>
+</body>
+</html>
